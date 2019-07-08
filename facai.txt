@@ -1,0 +1,13 @@
+基本域名
+api.kantv.vip
+
+数据库
+47.107.184.246		api_kantv_vip		CtaRSszMZdH2zdak
+
+FTP
+47.107.184.246		api_kantv_vip		mA2kHL5SMCiMiYm6
+
+框架
+Thinkphp 5.0.24
+
+
