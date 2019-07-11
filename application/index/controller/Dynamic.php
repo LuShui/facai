@@ -198,14 +198,17 @@ class Dynamic extends Base{
 				} else {
 					throw new \Exception("发布失败");
 				}
-				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id);
 			} else {
 				$map['commit_conent_id'] = 0;
 				$map['commit_two_userid'] = 0;
-				$this->add_pinlun_message($dynamic_id, $user_id, 0);
 			}
 			$map['addtime'] = time();
 			$res = db('commit_table')->insert($map);
+			if ($commit_type == 2) {
+				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id);
+			} else {
+				$this->add_pinlun_message($dynamic_id, $user_id, $res);
+			}
 			if (!$res) {
 				$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
 				throw new \Exception("发布失败");

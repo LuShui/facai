@@ -87,9 +87,13 @@ class Menber extends Base {
 				if ($value['message_is_look'] == 1) {
 					db('message_table')->where('message_id', $value['message_id'])->update(['message_is_look' => 1]);
 				}
+				if ($value['message_commit_id']) {
+					$value['commit_info'] = db('commit_table')->where('commit_id', $value['message_commit_id'])->find();
+				}
 			}
 			$resdata = ['code' => 1, 'data' => $list, 'message' => '请求成功'];
 		}
+		// dump($resdata);
 		return $resdata;
 	}
 
