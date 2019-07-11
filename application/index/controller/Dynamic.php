@@ -140,7 +140,7 @@ class Dynamic extends Base{
 
 	// 用户给动态点赞
 	public function dynamic_zan() {
-		$dynamic_id = input('dynamic_id', 68);
+		$dynamic_id = input('dynamic_id', 59);
 		$user_id = input('user_id', 5);
 		$finds = db('zan_table')->where('dynamic_id', $dynamic_id)->where('user_id', $user_id)->find();
 		if (!$finds) {
@@ -151,40 +151,100 @@ class Dynamic extends Base{
 			$resdata = ['code'=>0, 'data'=>[], 'message'=>'点赞失败'];
 			if ($res) {
 				$resdata = ['code'=>1, 'data'=>[], 'message'=>'点赞成功'];
+				$this->add_zan_message($dynamic_id, $user_id);
 			}
 		} else {
-			$resdata = ['code'=>2, 'data'=>[], 'message'=>'不可重复点赞'];
+			$res = db('zan_table')->where('dynamic_id', $dynamic_id)->where('user_id', $user_id)->delete();
+			if ($res) {
+				$resdata = ['code'=>2, 'data'=>[], 'message'=>'点赞取消成功'];
+			}
 		}
 		return $resdata;
+	}
+
+
+	// 添加点赞消息记录
+	public function add_zan_message ($dynamic_id, $user_id) {
+		$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
+		$send_userid = $userinfo['user_id'];
+		$map['message_type'] = 1;
+		$map['message_dynamic_id'] = $dynamic_id;
+		$map['message_sen_dynamic_userid'] = $send_userid;
+		$map['message_dynamic_userid'] = $user_id;
+		$map['addtime'] = time();
+		db('message_table')->insert($map);
 	}
 
 
 	// 评论动态
 	public function add_commit() {
-		$map['commit_dynamic_id'] = input('dynamic_id');
-		$map['commit_user_id'] = input('user_id');
-		$map['commit_content'] = input('commit_content');
-		// 评论的类型,1一级评论,直接对动态进行评论 2,回复他人评论
-		$map['commit_type'] = input('commit_type');
-		$map['commit_conent_id'] = input('commit_conent_id', 0);
-		$map['commit_two_userid'] = input('commit_two_userid', 0);
-		$map['addtime'] = time();
-		$res = db('commit_table')->insert($map);
-		$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
-		if ($res) {
-			$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
+		$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
+		try {
+			$dynamic_id = input('dynamic_id', 74);
+			$user_id = input('user_id',5);
+			$commit_conent_id = input('commit_conent_id',31);
+			$commit_two_userid = input('commit_two_userid',5);
+			$commit_type = input('commit_type',1);
+			$map['commit_dynamic_id'] = $dynamic_id;
+			$map['commit_user_id'] = $user_id;
+			$map['commit_content'] = input('commit_content', '回复他人评论');
+
+			// 评论的类型,1一级评论,直接对动态进行评论 2,回复他人评论
+			$map['commit_type'] = $commit_type;
+			if ($commit_type == 2) {
+				if ($commit_conent_id || $commit_two_userid) {
+					$map['commit_conent_id'] = $commit_conent_id;
+					$map['commit_two_userid'] = $commit_two_userid;
+				} else {
+					throw new \Exception("发布失败");
+				}
+				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id);
+			} else {
+				$map['commit_conent_id'] = 0;
+				$map['commit_two_userid'] = 0;
+				$this->add_pinlun_message($dynamic_id, $user_id, 0);
+			}
+			$map['addtime'] = time();
+			$res = db('commit_table')->insert($map);
+			if (!$res) {
+				$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
+				throw new \Exception("发布失败");
+			}
+		} catch (Exception $e) {
+			$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
 		}
 		return $resdata;
 	}
 
 
+	// 添加评论消息记录
+	public function add_pinlun_message ($dynamic_id, $user_id, $commit_id) {
+		$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
+		$send_userid = $userinfo['user_id'];
+		$map['message_type'] = 2;
+		$map['message_dynamic_id'] = $dynamic_id;
+		$map['message_sen_dynamic_userid'] = $send_userid;
+		$map['message_dynamic_userid'] = $user_id;
+		$map['message_commit_id'] = $commit_id;
+		$map['addtime'] = time();
+		db('message_table')->insert($map);
+	}
+
+
 	// 评论列表
 	public function commit_list() {
-		$resdata = ['code'=>1, 'data'=>[], 'message'=>'请求失败'];
-		$dynamic_id = input('dynamic_id');
+		$resdata = ['code'=>0, 'data'=>[], 'message'=>'请求失败'];
+		$dynamic_id = input('dynamic_id', 74);
 		$page = input('page');
 		$pagenum = $page * 10;
-		$list = db('commit_table')->where('commit_dynamic_id',$dynamic_id)->limit($pagenum, 10)->select();
+		$list = Db::query("SELECT c.*,u.user_head_image,u.user_name FROM vip_commit_table as c LEFT JOIN vip_user_table as u ON c.commit_user_id=u.user_id where commit_dynamic_id=? order by addtime desc limit ?, 10 ", [$dynamic_id, $pagenum]);
+		foreach ($list as $key => &$value) {
+			$commit_two_userid = $value['commit_two_userid'];
+			$commit_conent_id = $value['commit_conent_id'];
+			$value['two_userinfo'] = db('user_table')->where('user_id', $commit_two_userid)->find();
+			$value['two_commit'] = db('commit_table')->where('commit_id', $commit_conent_id)->find();
+		}
+		 // db('commit_table')->where('commit_dynamic_id',$dynamic_id)->limit($pagenum, 10)->select();
 		if ($list) {
 			$resdata = ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
 		}
