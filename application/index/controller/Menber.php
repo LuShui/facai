@@ -82,14 +82,15 @@ class Menber extends Base {
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];
 		$list = Db::query('SELECT msg.*, dyn.dynamic_title FROM vip_message_table as msg LEFT JOIN vip_dynamic_table dyn ON msg.message_dynamic_id=dyn.dynamic_id WHERE msg.message_sen_dynamic_userid=? ORDER BY addtime DESC  LIMIT ?,10', [$user_id, $pagenum]);
 		if ($list) {
-			foreach ($list as $key => $value) {
+			foreach ($list as $key => &$value) {
+				$value['userinfo'] = db('user_table')->where('user_id', $value['message_sen_dynamic_userid'])->find();
 				if ($value['message_is_look'] == 1) {
 					db('message_table')->where('message_id', $value['message_id'])->update(['message_is_look' => 1]);
 				}
 			}
 			$resdata = ['code' => 1, 'data' => $list, 'message' => '请求成功'];
 		}
-		return $list;
+		return $resdata;
 	}
 
 	// 我的评论列表
@@ -111,7 +112,7 @@ class Menber extends Base {
 			}
 		}
 		$resdata = ['code' => 1, 'data' => $list, 'message' => '请求成功'];
-		return $list;
+		return $resdata;
 	}
 
 
