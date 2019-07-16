@@ -203,11 +203,14 @@ class Dynamic extends Base{
 				$map['commit_two_userid'] = 0;
 			}
 			$map['addtime'] = time();
-			$res = db('commit_table')->insert($map);
+			$res = db('commit_table')->insertGetId($map);
 			if ($commit_type == 2) {
-				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id);
+				// commit_two_userid
+				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
 			} else {
-				$this->add_pinlun_message($dynamic_id, $user_id, $res);
+				$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
+				$send_userid = $userinfo['user_id'];
+				$this->add_pinlun_message($dynamic_id, $user_id, $res, $send_userid);
 			}
 			if (!$res) {
 				$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
@@ -221,9 +224,7 @@ class Dynamic extends Base{
 
 
 	// 添加评论消息记录
-	public function add_pinlun_message ($dynamic_id, $user_id, $commit_id) {
-		$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
-		$send_userid = $userinfo['user_id'];
+	public function add_pinlun_message ($dynamic_id, $user_id, $commit_id, $send_userid) {
 		$map['message_type'] = 2;
 		$map['message_dynamic_id'] = $dynamic_id;
 		$map['message_sen_dynamic_userid'] = $send_userid;

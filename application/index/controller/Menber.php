@@ -32,11 +32,11 @@ class Menber extends Base {
 
 	// 获取用户信息
 	public function menber_userinfo () {
-		$user_id = input('user_id', 5);
+		$user_id = input('user_id', 7);
 		$userinfo = db('user_table')->where('user_id', $user_id)->find();
 		
 		$userinfo['dynamic_count'] = db('dynamic_table')->where('user_id', $user_id)->count();
-		$userinfo['message_count'] = db('message_table')->where('message_dynamic_userid', $user_id)->where('message_is_look', 1)->count();
+		$userinfo['message_count'] = db('message_table')->where('message_sen_dynamic_userid', $user_id)->where('message_is_look', 1)->count();
 		$userinfo['commit_count'] = db('commit_table')->where('commit_user_id', $user_id)->count();
 		return ['code' => 1, 'data' => $userinfo, 'message' => '请求成功'];
 	}
@@ -76,24 +76,28 @@ class Menber extends Base {
 
 	// 我的消息
 	public function myMessage_list () {
-		$user_id = input('user_id', 5);
+		$user_id = input('user_id', 8);
 		$page = input('page', 0);
 		$pagenum = $page * 10;
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];
 		$list = Db::query('SELECT msg.*, dyn.dynamic_title FROM vip_message_table as msg LEFT JOIN vip_dynamic_table dyn ON msg.message_dynamic_id=dyn.dynamic_id WHERE msg.message_sen_dynamic_userid=? ORDER BY addtime DESC  LIMIT ?,10', [$user_id, $pagenum]);
 		if ($list) {
 			foreach ($list as $key => &$value) {
-				$value['userinfo'] = db('user_table')->where('user_id', $value['message_sen_dynamic_userid'])->find();
+				$value['userinfo'] = db('user_table')->where('user_id', $value['message_dynamic_userid'])->find();
 				if ($value['message_is_look'] == 1) {
-					db('message_table')->where('message_id', $value['message_id'])->update(['message_is_look' => 1]);
+					db('message_table')->where('message_id', $value['message_id'])->update(['message_is_look' => 2]);
 				}
 				if ($value['message_commit_id']) {
-					$value['commit_info'] = db('commit_table')->where('commit_id', $value['message_commit_id'])->find();
+					$commit_info = db('commit_table')->where('commit_id', $value['message_commit_id'])->find();
+					$value['commit_info'] = $commit_info;
+
+					if ($commit_info['commit_conent_id']) {
+						$value['commit_conent'] = db('commit_table')->where('commit_id', $commit_info['commit_conent_id'])->find();
+					}
 				}
 			}
 			$resdata = ['code' => 1, 'data' => $list, 'message' => '请求成功'];
 		}
-		// dump($resdata);
 		return $resdata;
 	}
 
