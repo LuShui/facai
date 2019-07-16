@@ -13,10 +13,10 @@ class User {
 			$resdata = ['code' => 1, 'message'=>'添加成功', 'data' => $userinfo];
 		} else {
 			$user_imname = uniqid() . 'QWER';
-			$data['user_openid'] = input('user_openid');
-			$data['user_name'] = input('user_name');
-			$data['user_head_image'] = input('user_head_image');
-			$data['user_regist_type'] = input('user_regist_type');
+			$data['user_openid'] = input('user_openid','12323');
+			$data['user_name'] = input('user_name','12312312');
+			$data['user_head_image'] = input('user_head_image','123123123');
+			$data['user_regist_type'] = input('user_regist_type',1);
 			$data['user_imname'] = $user_imname;
 			$res = db('user_table')->insert($data);
 			$registsuc = $this->regist_imuser($user_imname);

@@ -20,11 +20,11 @@ class Message {
 		$password = 'qwer123456789';
 		$res = $user->register($username, $password);
 		$obj = $res['body'][0];
-		$registsuc = false;
+		$registsuc = true;
 		try {
 		 $error =	$obj['error'];
 		} catch (Exception $e) {
-			$registsuc = true;
+			$registsuc = false;
 		}
 		return $registsuc;
 	}
