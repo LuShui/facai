@@ -12,17 +12,27 @@ class User {
 		if ($userinfo) {
 			$resdata = ['code' => 1, 'message'=>'添加成功', 'data' => $userinfo];
 		} else {
+			$user_imname = uniqid() . 'QWER';
 			$data['user_openid'] = input('user_openid');
 			$data['user_name'] = input('user_name');
 			$data['user_head_image'] = input('user_head_image');
 			$data['user_regist_type'] = input('user_regist_type');
+			$data['user_imname'] = $user_imname;
 			$res = db('user_table')->insert($data);
-			if ($res) {
+			$registsuc = $this->regist_imuser($user_imname);
+			if ($res && $registsuc) {
 				$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 				$resdata = ['code' => 1, 'message'=>'添加成功', 'data' => $userinfo];
 			}
 		}
 		return $resdata;
+	}
+
+
+	public function regist_imuser ($user_imname){
+		$msg = new Message();
+		$registsuc = $msg->regise_user($user_imname);
+		return $registsuc;
 	}
 
 
