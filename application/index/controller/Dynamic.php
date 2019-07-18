@@ -40,6 +40,12 @@ class Dynamic extends Base{
 		return $resdata;
 	}
 
+
+	// public function image_file () {
+	// 	$image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . 'image.png');
+	// 	$image->thumb(300, 300)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . 'image.png');
+	// }
+
 	// 多图上传
 	public function more_file_upload ($res) {
 		$success = true;
@@ -50,8 +56,8 @@ class Dynamic extends Base{
 	    	$info = $file->validate(['size' => 51200000, 'ext' => 'jpg,png,gif,jpeg'])->move(ROOT_PATH . 'public' . DS . 'uploads');
 	      if($info){
 	        $imagesrc = $info->getSaveName();
-	    //     $image = \think\Image::open(ROOT_PATH . 'public' . DS . 'uploads' . $imagesrc);
-					// $image->thumb(300, 300)->save(ROOT_PATH . 'public' . DS . 'uploads' . $imagesrc);
+	        $image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+					$image->thumb(1200, 1200)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
 	        $map['dynamic_image'] = $imagesrc;
 	        $map['dynamic_id'] = $res;
 	        Db::name('dynamic_images')->insert($map);

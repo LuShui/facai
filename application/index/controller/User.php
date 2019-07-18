@@ -6,11 +6,11 @@ class User {
 
 	// 注册登录
 	public function regist_user () {
-		$resdata = ['code' => 0, 'message'=>'添加失败'];
+		$resdata = ['code' => 0, 'message'=>'添加失败', 'data'=> []];
 		$user_openid = input('user_openid');
 		$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 		if ($userinfo) {
-			$resdata = ['code' => 1, 'message'=>'添加成功', 'data' => $userinfo];
+			$resdata = ['code' => 1, 'message'=>'用户存在', 'data' => $userinfo];
 		} else {
 			$user_imname = uniqid() . 'QWER';
 			$data['user_openid'] = input('user_openid','12323');

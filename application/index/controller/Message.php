@@ -4,6 +4,7 @@ use JMessage\JMessage;
 use JMessage\IM\Group;
 use JMessage\IM\User;
 use \think\Exception;
+use \think\Db;
 
 const APPKEY = 'fd96be9326ca8466881539de';
 const MASTERSECRET = 'de1ed90e61eb6690c5a0f363';
@@ -23,8 +24,11 @@ class Message {
 		$registsuc = true;
 		try {
 		 $error =	$obj['error'];
+		 if ($error) {
+				$registsuc = false;
+		 }
 		} catch (Exception $e) {
-			$registsuc = false;
+			$registsuc = true;
 		}
 		return $registsuc;
 	}
@@ -69,6 +73,101 @@ class Message {
 			$resdata = ['code'=>0, 'data' => $res, 'message'=> '添加失败'];
 		}
 		return $resdata;
+	}
+
+
+	// 发布约炮请求
+	public function add_chat_dynamic () {
+		Db::startTrans();
+		$resdata = [];
+		try {
+			$map['chat_desbute'] = input('chat_desbute');
+			$map['chat_addtime'] = time();
+			Db::name('chatone_table')->insert($map);
+			$res = Db::name('chatone_table')->getLastInsID();
+			$file = request()->file('chat_images');
+			$issicces = true;
+			if ($file) {
+				$issicces = $this->more_file_upload($res);
+			}
+			if ($res && $issicces) {
+				$resdata = ['code' => 1, 'data' => [], 'message' => '发布成功'];
+				Db::commit();
+			} else {
+				throw new \Exception("发布失败");
+			}
+		} catch (Exception $e) {
+			Db::rollback();
+			$resdata = ['code' => 0, 'data' => [], 'message' => $e->getMessage()];
+		}
+		return $resdata;
+	}
+
+	// 多图上传
+	public function more_file_upload ($res) {
+		$success = true;
+		try {
+			$array = [];
+			$files = request()->file('chat_images');
+	    foreach($files as $file){
+	    	$info = $file->validate(['size' => 51200000, 'ext' => 'jpg,png,gif,jpeg'])->move(ROOT_PATH . 'public' . DS . 'uploads');
+	      if($info){
+	        $imagesrc = $info->getSaveName();
+	        $image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+					$image->thumb(1200, 1200)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+	        $map['chat_image_path'] = $imagesrc;
+	        $map['chatone_id'] = $res;
+	        Db::name('chatimage_table')->insert($map);
+	        $tres = Db::name('chatimage_table')->getLastInsID();
+	        if (!$tres) {
+	        	throw new \Exception("发布失败");
+	        } else {
+	        	array_push($array, $tres);
+	        }
+	      }else{
+	        // 上传失败获取错误信息
+	        throw new \Exception("发布失败");
+	      }
+	    }
+      $imageskey = "";
+	    foreach ($array as $key => $value) {
+	    	if ($imageskey == "") {
+					$imageskey = $value;
+	    	} else {
+	    		$imageskey = $imageskey . ',' . $value ;
+	    	}
+	    }
+	    $upiscu = Db::name('chatone_table')->where('chat_id', $res)->update(['chat_image' => $imageskey]);
+	    if (!$upiscu) {
+	    	throw new \Exception("发布失败");
+	    }
+		} catch (Exception $e) {
+			$success = false;
+		}
+    return $success;
+	}
+
+
+	// 约炮列表
+	public function chat_lists () {
+		$page = input('page', 0);
+		$pagecount = $page * 10;
+		$list = db('chatone_table')->where('chat_statue', 1)->limit($pagecount, 10)->order('chat_addtime desc')->select();
+		foreach ($list as $key => &$value) {
+			if ($value['chat_image']) {
+				$value['chat_image'] = db('chatimage_table')->where('chatone_id', $value['chat_id'])->select();
+			}
+		}
+		return ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
+	}
+
+
+	// 群列表
+	public function group_lists() {
+		$page = input('page', 0);
+		$pagecount = $page * 10;
+		$list = db('chatroom_table')->limit($pagecount, 10)->order('room_addtime desc')-select();
+		return ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
 	}
 
 }
