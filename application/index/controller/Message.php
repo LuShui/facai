@@ -5,6 +5,7 @@ use JMessage\IM\Group;
 use JMessage\IM\User;
 use \think\Exception;
 use \think\Db;
+use \think\Image;
 
 const APPKEY = 'fd96be9326ca8466881539de';
 const MASTERSECRET = 'de1ed90e61eb6690c5a0f363';
@@ -82,6 +83,8 @@ class Message {
 		$resdata = [];
 		try {
 			$map['chat_desbute'] = input('chat_desbute');
+			$map['chat_userid'] = input('user_id');
+			$map['chat_city_code'] = input('chat_cityid');
 			$map['chat_addtime'] = time();
 			Db::name('chatone_table')->insert($map);
 			$res = Db::name('chatone_table')->getLastInsID();
@@ -157,10 +160,18 @@ class Message {
 			if ($value['chat_image']) {
 				$value['chat_image'] = db('chatimage_table')->where('chatone_id', $value['chat_id'])->select();
 			}
+			$value['userinfo'] = db('user_table')->where('user_id', $value['chat_userid'])->find();
 		}
 		return ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
 	}
 
+
+	// 开始约炮
+	public function chat_user () {
+		$user_id = input('user_id');
+		$userinfo = db('user_table')->where('user_id', $user_id)->find();
+		return ['code'=>1, 'data'=>$userinfo, 'message'=>'请求成功'];
+	}
 
 	// 群列表
 	public function group_lists() {
