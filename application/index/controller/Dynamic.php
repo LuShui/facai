@@ -184,6 +184,7 @@ class Dynamic extends Base{
 
 	// 评论动态
 	public function add_commit() {
+		Db::startTrans();
 		$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
 		try {
 			$dynamic_id = input('dynamic_id', 74);
@@ -210,20 +211,26 @@ class Dynamic extends Base{
 			}
 			$map['addtime'] = time();
 			$res = db('commit_table')->insertGetId($map);
+			$msgres = true;
 			if ($commit_type == 2) {
 				// commit_two_userid
-				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
+				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
 			} else {
 				$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
 				$send_userid = $userinfo['user_id'];
-				$this->add_pinlun_message($dynamic_id, $user_id, $res, $send_userid);
+				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $res, $send_userid);
 			}
 			if (!$res) {
 				$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
 				throw new \Exception("发布失败");
 			}
+			if (!$msgres) {
+					throw new \Exception("发布失败");
+				}
+			Db::commit();
 		} catch (Exception $e) {
 			$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
+			Db::rollback();
 		}
 		return $resdata;
 	}
@@ -237,7 +244,8 @@ class Dynamic extends Base{
 		$map['message_dynamic_userid'] = $user_id;
 		$map['message_commit_id'] = $commit_id;
 		$map['addtime'] = time();
-		db('message_table')->insert($map);
+		$res = db('message_table')->insert($map);
+		return $res;
 	}
 
 

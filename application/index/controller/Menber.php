@@ -10,6 +10,7 @@ class Menber extends Base {
 		$user_name = input('user_name');
 		$user_head_image = input('user_head_image');
 		$user_detil = input('user_detil');
+		$user_sex = input('user_sex');
 		if ($user_brithday) {
 			$map['user_brithday'] = $user_brithday;
 		}
@@ -17,10 +18,13 @@ class Menber extends Base {
 			$map['user_name'] = $user_name;
 		}
 		if ($user_head_image) {
-			$map['user_head_image'] = $user_head_image;
+			$map['user_head_image'] = $this->uploadonefile(); // $user_head_image;
 		}
 		if ($user_detil) {
 			$map['user_detil'] = $user_detil;
+		}
+		if ($user_sex) {
+			$map['user_sex'] = $user_sex;
 		}
 		$res = db('user_table')->where('user_id', $user_id)->update($map);
 		$resdata = ['code' => 0, 'data' => [], 'message' => '修改失败'];
@@ -28,6 +32,22 @@ class Menber extends Base {
 			$resdata = ['code' => 1, 'data' => [], 'message' => '修改成功'];
 		}
 		return $resdata;
+	}
+
+	public function uploadonefile () {
+		$imagesrc = '';
+		$files = request()->file('user_head_image');
+		if ($files) {
+			foreach($files as $file){
+	    	$info = $file->validate(['size' => 51200000, 'ext' => 'jpg,png,gif,jpeg'])->move(ROOT_PATH . 'public' . DS . 'uploads');
+		      if($info){
+		        $imagesrc = $info->getSaveName();
+		        $image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+						$image->thumb(1200, 1200)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+		      }
+		    }	
+		}
+		return $imagesrc;
 	}
 
 	// 获取用户信息
@@ -46,7 +66,7 @@ class Menber extends Base {
 		$user_id = input('user_id', 5);
 		$page = input('page', 0);
 		$pagenum = $page * 10;
-		$list = db('dynamic_table')->where('user_id', $user_id)->limit($pagenum, 10)->select();
+		$list = db('dynamic_table')->where('user_id', $user_id)->limit($pagenum, 10)->order('dynamic_time desc')->select();
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];
 		if ($list) {
 			foreach ($list as $key => &$value) {
@@ -76,7 +96,7 @@ class Menber extends Base {
 
 	// 我的消息
 	public function myMessage_list () {
-		$user_id = input('user_id', 8);
+		$user_id = input('user_id', 29);
 		$page = input('page', 0);
 		$pagenum = $page * 10;
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];
@@ -103,25 +123,25 @@ class Menber extends Base {
 
 	// 我的评论列表
 	public function myCommit_list(){
-		$user_id = input('user_id', 5);
+		$user_id = input('user_id', 23);
 		$page = input('page', 0);
 		$pagenum = $page * 10;
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];
-		$list = db('commit_table')->where('commit_user_id', $user_id)->limit($pagenum, 10)->select();
+		$list = db('commit_table')->where('commit_user_id', $user_id)->limit($pagenum, 10)->order('addtime desc')->select();
 		foreach ($list as $key => &$value) {
 			// 用户信息
 			$value['userinfo'] = db('user_table')->where('user_id', $value['commit_user_id'])->find();
+			$value['dynamic_title'] = db('dynamic_table')->where('dynamic_id', $value['commit_dynamic_id'])->field('dynamic_title')->find()['dynamic_title'];
 			if ($value['commit_two_userid']) {
 				// 被评论的用户信息
 				$value['userinfo_two'] = db('user_table')->where('user_id', $value['commit_two_userid'])->find();
 			}
 			if ($value['commit_conent_id']) {
-			 $value['commit_info'] =	db('commit_table')->where('commit_conent_id', $value['commit_conent_id'])->find();
+			 $value['commit_info'] =	db('commit_table')->where('commit_id', $value['commit_conent_id'])->find();
 			}
 		}
 		$resdata = ['code' => 1, 'data' => $list, 'message' => '请求成功'];
 		return $resdata;
 	}
-
 
 }
