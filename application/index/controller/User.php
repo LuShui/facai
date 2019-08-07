@@ -2,6 +2,8 @@
 namespace app\index\controller;
 use think\Cache;
 use think\Exception;
+use \think\Db;
+
 class User {
 
 
@@ -17,9 +19,10 @@ class User {
 	// 注册登录
 	public function regist_user () {
 		$resdata = ['code' => 0, 'message'=>'添加失败', 'data'=> []];
-		$user_openid = input('user_openid');
+		$user_openid = input('user_openid', 'testA00006');
 		$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 		if ($userinfo) {
+			$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 			$resdata = ['code' => 1, 'message'=>'用户存在', 'data' => $userinfo];
 		} else {
 			$user_imname = uniqid() . 'QWER';
@@ -51,6 +54,83 @@ class User {
 		return $resdata;
 	}
 
+
+	// 绑定用户code
+	public function bind_usercode () {
+		$userid = input('user_id');
+		$usergetcode = input('user_get_code', '');
+		$data['user_get_code'] = $usergetcode;
+		if ($usergetcode) {
+			// 邀请者的用户信息
+			$getuser = db('user_table')->where('user_code', $usergetcode)->find();
+			if ($getuser['user_type'] == 2) {
+				$data['user_shop_code'] = $getuser['user_code'];
+			} else {
+				$data['user_shop_code'] = $getuser['user_shop_code'];
+			}
+		}
+		$res = db('user_table')->where('user_id', $userid)->update($data);
+		$resdata = ['code' => 0, 'message'=>'绑定失败', 'data'=> []];
+		if ($res) {
+			$resdata = ['code' => 1, 'message'=>'绑定成功', 'data'=> []];
+		}
+		return $resdata;
+	}
+
+
+	// 绑定电影邀请code
+	public function bind_movecode () {
+		$userid = input('user_id');
+		$usermovecode = input('user_move_code', '');
+		$data['user_get_move_code'] = $usergetcode;
+		$resdata = ['code' => 0, 'message'=>'绑定失败', 'data'=> []];
+		$has = db('user_move_table')->where('move_code', $usermovecode)->find();
+		if ($has) {
+			$res = db('user_table')->where('user_id', $userid)->update($data);
+			if ($res) {
+				$resdata = ['code' => 1, 'message'=>'绑定成功', 'data'=> []];
+			}
+		}
+		// if ($usermovecode) {
+		// 	// 邀请者的用户信息
+		// 	$getuser = db('user_table')->where('user_move_code', $usergetcode)->find();
+		// 	if ($getuser['user_type'] == 2) {
+		// 		$data['user_shop_code'] = $getuser['user_code'];
+		// 	} else {
+		// 		$data['user_shop_code'] = $getuser['user_shop_code'];
+		// 	}
+		// }
+		// $res = db('user_table')->where('user_id', $userid)->update($data);
+		return $resdata;
+	}
+
+
+	// 将用户设置为电影邀请人
+	public function seMoveuser () {
+		Db::startTrans();
+		$resdata = ['code' => 1, 'message'=>'绑定成功', 'data'=> []];
+		try {
+			$userid = input('user_id', 36);
+			$codestr = uniqid();
+			$map['user_move_code'] = $codestr;
+			$add = db('user_table')->where('user_id', $userid)->update($map);
+
+			$data['move_code'] = $codestr;
+			$data['move_link'] = 'http://api.kantv.vip/movie/index.html';
+			$data['move_addtime'] = time();
+			$moveadd = db('user_move_table')->insert($data);
+
+			if (!$add || !$moveadd) {
+				throw new \Exception("发布失败");
+			}
+			Db::commit();
+		} catch (Exception $e) {
+			Db::rollback();
+			$resdata = ['code' => 0, 'message'=>'绑定失败', 'data'=> []];
+		}
+		
+		dump($resdata);
+	}
 
 	public function regist_imuser ($user_imname){
 		$msg = new Message();
