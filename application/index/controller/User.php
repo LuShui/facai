@@ -4,20 +4,43 @@ use think\Cache;
 use think\Exception;
 class User {
 
+
+	public function resetlist () {
+		$list = db('user_table')->select();
+		foreach ($list as $key => $value) {
+			$map['user_code'] = uniqid();
+			db('user_table')->where('user_id', $value['user_id'])->update($map);
+		}
+	}
+
+
 	// 注册登录
 	public function regist_user () {
-		$resdata = ['code' => 0, 'message'=>'添加失败'];
+		$resdata = ['code' => 0, 'message'=>'添加失败', 'data'=> []];
 		$user_openid = input('user_openid');
 		$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 		if ($userinfo) {
-			$resdata = ['code' => 1, 'message'=>'添加成功', 'data' => $userinfo];
+			$resdata = ['code' => 1, 'message'=>'用户存在', 'data' => $userinfo];
 		} else {
 			$user_imname = uniqid() . 'QWER';
-			$data['user_openid'] = input('user_openid','12323');
-			$data['user_name'] = input('user_name','12312312');
-			$data['user_head_image'] = input('user_head_image','123123123');
-			$data['user_regist_type'] = input('user_regist_type',1);
+			$data['user_openid'] = input('user_openid','');
+			$data['user_name'] = input('user_name','');
+			$data['user_head_image'] = input('user_head_image','');
+			$data['user_regist_type'] = input('user_regist_type', 1);
 			$data['user_imname'] = $user_imname;
+			$data['user_code'] = uniqid();
+			$usergetcode = input('user_get_code', '');
+			$data['user_get_code'] = $usergetcode;
+			if ($usergetcode) {
+				// 邀请者的用户信息
+				$getuser = db('user_table')->where('user_code', $usergetcode)->find();
+				if ($getuser['user_type'] == 2) {
+					$data['user_shop_code'] = $getuser['user_code'];
+				} else {
+					$data['user_shop_code'] = $getuser['user_shop_code'];
+				}
+			}
+
 			$res = db('user_table')->insert($data);
 			$registsuc = $this->regist_imuser($user_imname);
 			if ($res && $registsuc) {
@@ -28,6 +51,28 @@ class User {
 		return $resdata;
 	}
 
+
+	// 绑定用户code
+	public function bind_usercode () {
+		$userid = input('user_id');
+		$usergetcode = input('user_get_code', '');
+		$data['user_get_code'] = $usergetcode;
+		if ($usergetcode) {
+			// 邀请者的用户信息
+			$getuser = db('user_table')->where('user_code', $usergetcode)->find();
+			if ($getuser['user_type'] == 2) {
+				$data['user_shop_code'] = $getuser['user_code'];
+			} else {
+				$data['user_shop_code'] = $getuser['user_shop_code'];
+			}
+		}
+		$res = db('user_table')->where('user_id',$userid)->update($data);
+		$resdata = ['code' => 0, 'message'=>'绑定失败', 'data'=> []];
+		if ($res) {
+			$resdata = ['code' => 1, 'message'=>'绑定成功', 'data'=> []];
+		}
+		return $resdata;
+	}
 
 	public function regist_imuser ($user_imname){
 		$msg = new Message();

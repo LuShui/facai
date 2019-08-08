@@ -40,6 +40,12 @@ class Dynamic extends Base{
 		return $resdata;
 	}
 
+
+	// public function image_file () {
+	// 	$image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . 'image.png');
+	// 	$image->thumb(300, 300)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . 'image.png');
+	// }
+
 	// 多图上传
 	public function more_file_upload ($res) {
 		$success = true;
@@ -50,8 +56,8 @@ class Dynamic extends Base{
 	    	$info = $file->validate(['size' => 51200000, 'ext' => 'jpg,png,gif,jpeg'])->move(ROOT_PATH . 'public' . DS . 'uploads');
 	      if($info){
 	        $imagesrc = $info->getSaveName();
-	    //     $image = \think\Image::open(ROOT_PATH . 'public' . DS . 'uploads' . $imagesrc);
-					// $image->thumb(300, 300)->save(ROOT_PATH . 'public' . DS . 'uploads' . $imagesrc);
+	        $image = \think\Image::open(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
+					$image->thumb(1200, 1200)->save(ROOT_PATH . DS . 'public' . DS . 'uploads' . DS . $imagesrc);
 	        $map['dynamic_image'] = $imagesrc;
 	        $map['dynamic_id'] = $res;
 	        Db::name('dynamic_images')->insert($map);
@@ -178,6 +184,7 @@ class Dynamic extends Base{
 
 	// 评论动态
 	public function add_commit() {
+		// Db::startTrans();
 		$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
 		try {
 			$dynamic_id = input('dynamic_id', 74);
@@ -203,21 +210,30 @@ class Dynamic extends Base{
 				$map['commit_two_userid'] = 0;
 			}
 			$map['addtime'] = time();
-			$res = db('commit_table')->insertGetId($map);
+			db('commit_table')->insert($map);
+			$res = db('commit_table')->getLastInsID();
+			$msgres = true;
 			if ($commit_type == 2) {
 				// commit_two_userid
-				$this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
+				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $res, $commit_two_userid);
+				// $msgres = $this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
 			} else {
 				$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
 				$send_userid = $userinfo['user_id'];
-				$this->add_pinlun_message($dynamic_id, $user_id, $res, $send_userid);
+				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $res, $send_userid);
 			}
 			if (!$res) {
 				$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
 				throw new \Exception("发布失败");
 			}
+			if (!$msgres) {
+					throw new \Exception("发布失败");
+				}
+				$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功', 'messageid' => $res];
+			// Db::commit();
 		} catch (Exception $e) {
 			$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
+			// Db::rollback();
 		}
 		return $resdata;
 	}
@@ -231,7 +247,8 @@ class Dynamic extends Base{
 		$map['message_dynamic_userid'] = $user_id;
 		$map['message_commit_id'] = $commit_id;
 		$map['addtime'] = time();
-		db('message_table')->insert($map);
+		$res = db('message_table')->insert($map);
+		return $res;
 	}
 
 
