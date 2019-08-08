@@ -2,21 +2,13 @@
 namespace app\index\controller;
 use think\Cache;
 use think\Exception;
-<<<<<<< HEAD
 
-=======
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
-/**
- * 
- */
 class Adver{
 
-<<<<<<< HEAD
 	// 广告列表
 	public function ad_list () {
 		$shop_code = input('user_shop_code', '');
 		$list = db('adver_table')->where('ad_shop_code', $shop_code)->limit(0, 10)->order('ad_addtime desc')->select();
-=======
 	public function index () {
 		return view('index'); 
 	}
@@ -44,7 +36,6 @@ class Adver{
 	public function ad_list () {
 		$shop_code = input('user_shop_code', '');
 		$list = db('adver_table')->where('ad_shop_code', $shop_code)->limit(0, 20)->order('ad_addtime desc')->select();
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 		$resdata = ['code' => 0, 'message'=>'暂无记录', 'data'=> []];
 		if ($list) {
 			$resdata = ['code' => 1, 'message'=>'获取数据成功', 'data'=> $list];

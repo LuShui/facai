@@ -97,11 +97,7 @@ class Menber extends Base {
 
 	// 我的消息
 	public function myMessage_list () {
-<<<<<<< HEAD
 		$user_id = input('user_id', 36);
-=======
-		$user_id = input('user_id', 29);
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 		$page = input('page', 0);
 		$pagenum = $page * 10;
 		$resdata = ['code' => 0, 'data' => [], 'message' => '暂无数据'];

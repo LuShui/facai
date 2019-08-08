@@ -19,16 +19,10 @@ class User {
 	// 注册登录
 	public function regist_user () {
 		$resdata = ['code' => 0, 'message'=>'添加失败', 'data'=> []];
-<<<<<<< HEAD
-		$user_openid = input('user_openid');
-		$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
-		if ($userinfo) {
-=======
 		$user_openid = input('user_openid', 'testA00006');
 		$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
 		if ($userinfo) {
 			$userinfo = db('user_table')->where('user_openid', $user_openid)->find();
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 			$resdata = ['code' => 1, 'message'=>'用户存在', 'data' => $userinfo];
 		} else {
 			$user_imname = uniqid() . 'QWER';
@@ -75,20 +69,13 @@ class User {
 				$data['user_shop_code'] = $getuser['user_shop_code'];
 			}
 		}
-<<<<<<< HEAD
 		$res = db('user_table')->where('user_id',$userid)->update($data);
-=======
-		$res = db('user_table')->where('user_id', $userid)->update($data);
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 		$resdata = ['code' => 0, 'message'=>'绑定失败', 'data'=> []];
 		if ($res) {
 			$resdata = ['code' => 1, 'message'=>'绑定成功', 'data'=> []];
 		}
 		return $resdata;
 	}
-
-<<<<<<< HEAD
-=======
 
 	// 绑定电影邀请code
 	public function bind_movecode () {

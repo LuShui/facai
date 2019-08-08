@@ -184,11 +184,8 @@ class Dynamic extends Base{
 
 	// 评论动态
 	public function add_commit() {
-<<<<<<< HEAD
 		// Db::startTrans();
-=======
-		Db::startTrans();
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
+
 		$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
 		try {
 			$dynamic_id = input('dynamic_id', 74);
@@ -214,7 +211,6 @@ class Dynamic extends Base{
 				$map['commit_two_userid'] = 0;
 			}
 			$map['addtime'] = time();
-<<<<<<< HEAD
 			db('commit_table')->insert($map);
 			$res = db('commit_table')->getLastInsID();
 			$msgres = true;
@@ -222,13 +218,7 @@ class Dynamic extends Base{
 				// commit_two_userid
 				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $res, $commit_two_userid);
 				// $msgres = $this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
-=======
-			$res = db('commit_table')->insertGetId($map);
-			$msgres = true;
-			if ($commit_type == 2) {
-				// commit_two_userid
-				$msgres = $this->add_pinlun_message($dynamic_id, $user_id, $commit_conent_id, $commit_two_userid);
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
+
 			} else {
 				$userinfo = db('dynamic_table')->where('dynamic_id', $dynamic_id)->find();
 				$send_userid = $userinfo['user_id'];
@@ -241,18 +231,11 @@ class Dynamic extends Base{
 			if (!$msgres) {
 					throw new \Exception("发布失败");
 				}
-<<<<<<< HEAD
-				$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功', 'messageid' => $res];
-			// Db::commit();
-		} catch (Exception $e) {
-			$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
-			// Db::rollback();
-=======
+
 			Db::commit();
 		} catch (Exception $e) {
 			$resdata = ['code'=>0, 'data'=>[], 'message'=>'评论失败'];
 			Db::rollback();
->>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 		}
 		return $resdata;
 	}
