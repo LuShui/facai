@@ -181,6 +181,7 @@ class Message {
 		return ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
 	}
 
+<<<<<<< HEAD
 	// 我的约炮列表
 	public function my_chat_lists () {
 		$resdata = ['code'=>0, 'data'=>[], 'message'=>'暂无数据'];
@@ -225,4 +226,6 @@ class Message {
 		return $resdata;
 	}
 
+=======
+>>>>>>> 488a8d95fba81e0f812fc454cabb850b43ffa6c2
 }
