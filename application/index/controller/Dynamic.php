@@ -20,6 +20,7 @@ class Dynamic extends Base{
 			$map['dynamic_title'] = input('dynamic_title');
 			$map['dynamic_cityid'] = input('dynamic_cityid');
 			$map['dynamic_time'] = time();
+			$map['dynamic_tabid'] = input('dynamic_tabid');
 			Db::name('dynamic_table')->insert($map);
 			$res = Db::name('dynamic_table')->getLastInsID();
 			$issicces = true;
@@ -94,8 +95,9 @@ class Dynamic extends Base{
 	public function dynamic_list () {
 		$page = input('page', 0);
 		$cityid = input('cityid', 3);
+		$dynamic_tabid = input('dynamic_tabid', 1);
 		$pagenum = $page * 10;
-		$list = db('dynamic_table')->where('dynamic_cityid', $cityid)->limit($pagenum, 10)->order('dynamic_time desc')->select();
+		$list = db('dynamic_table')->where('dynamic_cityid', $cityid)->where('dynamic_tabid', $dynamic_tabid)->limit($pagenum, 10)->order('dynamic_time desc')->select();
 		$resdata = ['code'=>0, 'data'=>[], 'message'=>'暂无数据'];
 		if ($list) {
 			foreach ($list as $key => &$value) {
@@ -184,7 +186,7 @@ class Dynamic extends Base{
 
 	// 评论动态
 	public function add_commit() {
-		// Db::startTrans();
+		Db::startTrans();
 
 		$resdata = ['code'=>1, 'data'=>[], 'message'=>'评论成功'];
 		try {
@@ -268,6 +270,17 @@ class Dynamic extends Base{
 			$value['two_commit'] = db('commit_table')->where('commit_id', $commit_conent_id)->find();
 		}
 		 // db('commit_table')->where('commit_dynamic_id',$dynamic_id)->limit($pagenum, 10)->select();
+		if ($list) {
+			$resdata = ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
+		}
+		return $resdata;
+	}
+
+
+
+	public function get_tab_list () {
+		$list =	db('tab_table')->order('tab_sort desc')->select();
+		$resdata = ['code'=>0, 'data'=>[], 'message'=>'请求失败'];
 		if ($list) {
 			$resdata = ['code'=>1, 'data'=>$list, 'message'=>'请求成功'];
 		}
